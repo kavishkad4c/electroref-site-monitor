@@ -1,0 +1,44 @@
+name: Electroref Sentinel Agent
+
+on:
+  # 1. THE HEARTBEAT: Run automatically every day at midnight UTC
+  schedule:
+    - cron: '0 0 * * *' 
+  # Allows you to trigger it manually for testing
+  workflow_dispatch: 
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+
+    - name: RUN MONITORING AGENT
+      run: npx playwright test --project=chromium
+
+    - name: Upload Health Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: electroref-health-report
+        path: playwright-report/
+    - name: Send Alert on Failure
+      if: failure()
+      run: |
+        curl -H "Content-Type: application/json" \
+        -X POST \
+        -d "{\"content\": \"🚨 **ALERT:** The Electroref Site Monitor has detected a failure! Check the report here: https://github.com/${{ github.repository }}/actions\"}" \
+        ${{ secrets.DISCORD_WEBHOOK }}
