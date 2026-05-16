@@ -26,4 +26,4 @@ This project is configured as a continuous monitoring agent rather than a standa
 **To run the monitoring agent locally:**
 ```bash
 npm install
-npx playwright test --project=chromium
+npx playwright test --project=chromium 
